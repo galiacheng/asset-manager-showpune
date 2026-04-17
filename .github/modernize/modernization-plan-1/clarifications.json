@@ -1,0 +1,10 @@
+[
+  {
+    "question": "What is the target Azure compute service for deployment (e.g., Azure Container Apps, Azure Kubernetes Service, Azure App Service)? This will determine whether containerization (Dockerfile) is needed.",
+    "answer": ""
+  },
+  {
+    "question": "Do you need infrastructure provisioning (Bicep/Terraform) to create the Azure resources (Blob Storage, Service Bus, Azure Database for PostgreSQL), or will those resources be provisioned separately?",
+    "answer": ""
+  }
+]

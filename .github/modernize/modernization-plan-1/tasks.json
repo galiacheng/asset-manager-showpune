@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Tasks template for modernization plan. Generate this file alongside plan.md to track individual migration tasks.",
+  "tasks": [
+    {
+      "type": "upgrade",
+      "id": "001-upgrade-spring-boot-3x",
+      "description": "Upgrade the multi-module Maven project from Spring Boot 2.7.14 / Java 11 to Spring Boot 3.x / Java 21, including Spring Framework 6.x and Jakarta EE namespace migration (javax.* to jakarta.*).",
+      "reason": "Spring Boot 2.7.x and Java 11 have reached end of OSS support. Upgrading to Spring Boot 3.x with Java 21 restores long-term support, security patches, and enables modern Jakarta EE APIs required by subsequent Azure migration tasks.",
+      "requirements": "Upgrade parent POM Spring Boot version from 2.7.14 to latest stable 3.x. Update Java version from 11 to 21. Migrate all javax.* namespace imports to jakarta.* across both web and worker modules. Resolve any deprecated API usage introduced by the framework upgrade. Ensure both modules compile and existing tests pass after upgrade.",
+      "environmentConfiguration": null,
+      "skills": [],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "002-transform-migration-s3-to-azure-blob-storage",
+      "description": "Migrate AWS S3 object storage to Azure Blob Storage in both the web and worker modules.",
+      "reason": "The application currently uses AWS S3 (SDK v2) for file uploads, downloads, listing, and deletion in both the web module (AwsS3Service) and the worker module (S3FileProcessingService). Migrating to Azure Blob Storage aligns with the target Azure platform.",
+      "requirements": "Replace all AWS S3 SDK usage with Azure Blob Storage across both web and worker modules. Migrate S3 client configuration, upload, download, list, and delete operations. Update the StorageService interface implementation. Update the worker's S3FileProcessingService for thumbnail storage. Remove AWS SDK dependencies and configuration properties. Use managed identity for authentication.",
+      "environmentConfiguration": null,
+      "skills": [
+        {
+          "name": "migration-s3-to-azure-blob-storage",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "003-transform-migration-rabbitmq-to-servicebus",
+      "description": "Migrate RabbitMQ AMQP messaging to Azure Service Bus in both the web and worker modules.",
+      "reason": "The application uses RabbitMQ via Spring AMQP for asynchronous image processing messages between the web and worker modules. Migrating to Azure Service Bus provides a fully managed messaging service on the Azure platform.",
+      "requirements": "Replace Spring AMQP RabbitMQ usage with Azure Service Bus across both web and worker modules. Migrate queue configuration (RabbitConfig), message sending (RabbitTemplate), and message listeners (@RabbitListener with manual acknowledgment and retry logic). Update message converter setup. Remove RabbitMQ dependencies and configuration properties. Use managed identity for authentication.",
+      "environmentConfiguration": null,
+      "skills": [
+        {
+          "name": "migration-amqp-rabbitmq-servicebus",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "004-transform-migration-postgresql-to-azure-postgresql-mi",
+      "description": "Migrate PostgreSQL database connectivity to Azure Database for PostgreSQL with managed identity for credential-free authentication.",
+      "reason": "Both the web and worker modules connect to a local PostgreSQL instance using hardcoded password credentials. Migrating to Azure Database for PostgreSQL with managed identity eliminates stored credentials and provides a fully managed, secure database service.",
+      "requirements": "Migrate database connectivity in both web and worker modules from password-based local PostgreSQL to Azure Database for PostgreSQL using managed identity. Update datasource configuration to use credential-free authentication. Remove hardcoded database passwords from application.properties. Ensure JPA/Hibernate configuration is compatible with Azure Database for PostgreSQL.",
+      "environmentConfiguration": null,
+      "skills": [
+        {
+          "name": "migration-mi-postgresql-azure-sdk-public-cloud",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    }
+  ],
+  "metadata": {
+    "planName": "modernization-plan-1",
+    "projectName": "assets-manager-parent",
+    "language": "java",
+    "createdAt": "2026-04-17T11:16:53.210Z",
+    "version": "1.0"
+  }
+}

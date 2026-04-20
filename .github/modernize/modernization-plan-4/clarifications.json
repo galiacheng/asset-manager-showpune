@@ -1,0 +1,10 @@
+[
+  {
+    "question": "What is the target Azure deployment service for the containerized application (e.g., Azure Container Apps, Azure Kubernetes Service, Azure App Service)?",
+    "answer": ""
+  },
+  {
+    "question": "The web module includes a LocalFileStorageService that uses the local file system alongside S3. Should local file storage functionality be preserved as a fallback, or should all storage operations exclusively use Azure Blob Storage?",
+    "answer": ""
+  }
+]

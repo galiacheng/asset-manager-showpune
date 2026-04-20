@@ -1,0 +1,10 @@
+[
+  {
+    "question": "The assessment found 'No Dockerfile found' as a mandatory issue. Should containerization (Dockerfile generation) be included in this plan? If yes, what is the target Azure deployment service (Azure Container Apps, AKS, or App Service)?",
+    "answer": ""
+  },
+  {
+    "question": "The application has local file system operations (Java NIO) used for temporary file processing (thumbnails). Should these local file operations be migrated to Azure mounted storage, or should they remain as local temporary file handling?",
+    "answer": ""
+  }
+]

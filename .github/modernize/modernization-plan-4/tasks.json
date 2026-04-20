@@ -1,0 +1,93 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Tasks template for modernization plan. Generate this file alongside plan.md to track individual migration tasks.",
+  "tasks": [
+    {
+      "type": "upgrade",
+      "id": "001-upgrade-spring-boot-3",
+      "description": "Upgrade from Spring Boot 2.7.14 (Java 11) to Spring Boot 3.x (Java 21), including Spring Framework 6.x and javax-to-jakarta namespace migration.",
+      "reason": "Spring Boot 2.7.14 and Java 11 are end of OSS support. Upgrading ensures long-term support, security patches, and compatibility with modern Azure SDKs.",
+      "requirements": "Upgrade the parent and all modules from Spring Boot 2.7.14 to Spring Boot 3.x with Java 21. This includes migrating javax.* namespaces to jakarta.*, upgrading Spring Framework to 6.x, and resolving any deprecated API usage. Both web and worker modules must compile and pass tests after the upgrade.",
+      "environmentConfiguration": null,
+      "skills": [],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "002-transform-aws-s3-to-azure-blob-storage",
+      "description": "Migrate AWS S3 file storage to Azure Blob Storage across both web and worker modules.",
+      "reason": "The application uses AWS S3 SDK for file uploads, downloads, and thumbnail storage. Migrating to Azure Blob Storage aligns with the Azure-first cloud strategy.",
+      "requirements": "Replace all AWS S3 SDK usage with Azure Blob Storage in both web and worker modules. This includes the S3 configuration classes, storage service implementations, and S3 controller. Remove AWS SDK dependencies and AWS-specific configuration (access keys, secret keys, region). Use Managed Identity for authentication.",
+      "environmentConfiguration": null,
+      "skills": [
+        {
+          "name": "migration-s3-to-azure-blob-storage",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "003-transform-rabbitmq-to-azure-service-bus",
+      "description": "Migrate RabbitMQ AMQP messaging to Azure Service Bus across both web and worker modules.",
+      "reason": "The application uses RabbitMQ with Spring AMQP for asynchronous messaging between web and worker modules. Migrating to Azure Service Bus provides a fully managed messaging service on Azure.",
+      "requirements": "Replace Spring AMQP RabbitMQ messaging with Azure Service Bus in both web and worker modules. This includes the RabbitMQ configuration classes, message producers in the web module, and message consumers in the worker module. Remove RabbitMQ-specific configuration (host, port, username, password). Use Managed Identity for authentication.",
+      "environmentConfiguration": null,
+      "skills": [
+        {
+          "name": "migration-amqp-rabbitmq-servicebus",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "004-transform-postgresql-to-azure-postgresql-mi",
+      "description": "Migrate from password-based PostgreSQL to Azure Database for PostgreSQL with Managed Identity.",
+      "reason": "The application connects to a local PostgreSQL database using hardcoded username and password credentials. Migrating to Azure Database for PostgreSQL with Managed Identity eliminates credential management and improves security.",
+      "requirements": "Migrate both web and worker modules from password-based PostgreSQL authentication to Azure Database for PostgreSQL with Managed Identity for secure, credential-free authentication. Remove hardcoded database credentials from configuration files.",
+      "environmentConfiguration": null,
+      "skills": [
+        {
+          "name": "migration-mi-postgresql-azure-sdk-public-cloud",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "containerization",
+      "id": "005-containerization",
+      "description": "Create Dockerfiles for both web and worker modules to enable containerized Azure deployment.",
+      "reason": "No Dockerfiles exist in the project. Containerization is required for deploying to Azure container-based services.",
+      "requirements": "Create Dockerfiles for both the web and worker modules. Each Dockerfile should use a multi-stage build with a Maven build stage and a JRE runtime stage targeting Java 21. The images should be optimized for production use.",
+      "environmentConfiguration": null,
+      "dockerfilePath": "Dockerfile (to be created for each module)"
+    }
+  ],
+  "metadata": {
+    "planName": "modernization-plan-4",
+    "projectName": "assets-manager-parent",
+    "language": "java",
+    "createdAt": "2026-04-20T03:12:12.408Z",
+    "version": "1.0"
+  }
+}

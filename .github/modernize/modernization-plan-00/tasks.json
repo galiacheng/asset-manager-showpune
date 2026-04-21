@@ -1,0 +1,110 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Tasks template for modernization plan. Generate this file alongside plan.md to track individual migration tasks.",
+  "tasks": [
+    {
+      "type": "upgrade",
+      "id": "001-upgrade-spring-boot-3",
+      "description": "Upgrade Spring Boot from 2.7.14 to 3.x, which includes upgrading to Java 21 and migrating from JavaEE (javax.*) to Jakarta EE (jakarta.*) namespace",
+      "reason": "Spring Boot 2.7.14 and Spring Framework 5.x are end of OSS support. Java 11 is a legacy version. Upgrading to Spring Boot 3.x and Java 21 ensures long-term support, security patches, and compatibility with modern Azure SDKs.",
+      "requirements": "Upgrade the root pom.xml and both module pom.xml files (web and worker) from Spring Boot 2.7.14 to the latest Spring Boot 3.x release. This upgrade must also update Java source/target compatibility to Java 21, migrate all javax.* imports to jakarta.* equivalents (Jakarta EE 10), and ensure the project builds and all existing tests pass after the upgrade.",
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "002-transform-s3-to-azure-blob-storage",
+      "description": "Migrate AWS S3 storage to Azure Blob Storage with Managed Identity authentication",
+      "reason": "The application uses AWS S3 for object storage in both the web and worker modules. AWS S3 dependencies and configuration (access key, secret key, region, bucket) must be replaced with Azure Blob Storage to run on Azure.",
+      "requirements": "Replace AWS SDK S3 dependencies in both web/pom.xml and worker/pom.xml with Azure Blob Storage SDK. Migrate all S3 client usage (upload, download, delete operations) in both modules to use Azure Blob Storage client. Replace AWS credentials (aws.accessKey, aws.secretKey, aws.region, aws.s3.bucket) in application.properties with Azure Blob Storage connection using Managed Identity. Update S3FileProcessingService in worker module and any S3-related services in the web module.",
+      "skills": [
+        {
+          "name": "migration-s3-to-azure-blob-storage",
+          "location": "builtin"
+        }
+      ],
+      "dependencies": ["001-upgrade-spring-boot-3"],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "003-transform-local-files-to-azure-storage",
+      "description": "Migrate local file system storage (Java NIO) to Azure Blob Storage (mounted path)",
+      "reason": "The application uses local file system storage via Java NIO APIs in LocalFileStorageService (web) and LocalFileProcessingService (worker). Local disk storage is not suitable for cloud deployment where persistent local storage is ephemeral.",
+      "requirements": "Migrate LocalFileStorageService in the web module and LocalFileProcessingService in the worker module from using java.nio.file APIs with local paths to using Azure Blob Storage via mounted Azure Storage paths (using the path prefix ${AZURE_MOUNT_PATH:/mnt/azure}). All file operations (create, read, list, delete, copy) should be updated to work through the mounted Azure Storage path.",
+      "dependencies": ["001-upgrade-spring-boot-3"],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "004-transform-postgresql-to-azure-postgresql-mi",
+      "description": "Migrate PostgreSQL connection to Azure Database for PostgreSQL with Managed Identity authentication",
+      "reason": "The application uses a local PostgreSQL database with hardcoded username/password credentials in application.properties. Azure Database for PostgreSQL with Managed Identity provides secure, credential-free authentication and eliminates the risk of leaked database credentials.",
+      "requirements": "Update both web and worker modules to connect to Azure Database for PostgreSQL using Managed Identity instead of password-based authentication. Remove hardcoded datasource credentials (spring.datasource.username=postgres, spring.datasource.password=postgres) from application.properties. Update the JDBC connection URL to point to the Azure PostgreSQL endpoint. Configure the Spring DataSource to use the Azure Identity token provider for Managed Identity authentication.",
+      "skills": [
+        {
+          "name": "migration-mi-postgresql-azure-sdk-public-cloud",
+          "location": "builtin"
+        }
+      ],
+      "dependencies": ["001-upgrade-spring-boot-3"],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "005-transform-rabbitmq-to-azure-service-bus",
+      "description": "Migrate RabbitMQ (Spring AMQP) to Azure Service Bus with Managed Identity authentication",
+      "reason": "The application uses RabbitMQ via Spring AMQP (spring-boot-starter-amqp) in both web and worker modules for asynchronous messaging, with hardcoded credentials. Azure Service Bus is a fully managed messaging service that eliminates the operational overhead of self-managed RabbitMQ and supports Managed Identity for credential-free authentication.",
+      "requirements": "Replace spring-boot-starter-amqp dependency with Azure Service Bus SDK in both web/pom.xml and worker/pom.xml. Migrate all RabbitMQ producer and consumer code (using Spring AMQP annotations and templates) to use Azure Service Bus client. Replace RabbitMQ connection configuration (spring.rabbitmq.host, port, username, password) in application.properties with Azure Service Bus connection using Managed Identity. Ensure queue/topic naming is preserved and message serialization remains compatible.",
+      "skills": [
+        {
+          "name": "migration-amqp-rabbitmq-servicebus",
+          "location": "builtin"
+        }
+      ],
+      "dependencies": ["001-upgrade-spring-boot-3"],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "containerization",
+      "id": "006-containerization",
+      "description": "Create Dockerfile for containerizing the application for Azure deployment",
+      "reason": "The assessment found no Dockerfile in the project. Containerizing the application is required for deployment to Azure container services (e.g., Azure Container Apps, AKS).",
+      "requirements": "Create a multi-stage Dockerfile for both the web and worker modules using a Java 21 base image. The Dockerfile should use a Maven build stage to compile and package the application, then copy the final JAR into a minimal runtime image. Ensure the Dockerfile follows best practices: non-root user, appropriate EXPOSE ports (web: 8080, worker: 8081), and ENTRYPOINT configuration.",
+      "dockerfilePath": "Dockerfile (to be created)",
+      "dependencies": [
+        "001-upgrade-spring-boot-3",
+        "002-transform-s3-to-azure-blob-storage",
+        "003-transform-local-files-to-azure-storage",
+        "004-transform-postgresql-to-azure-postgresql-mi",
+        "005-transform-rabbitmq-to-azure-service-bus"
+      ]
+    }
+  ],
+  "metadata": {
+    "planName": "modernization-plan-00",
+    "projectName": "assets-manager-parent",
+    "language": "java",
+    "createdAt": "2026-04-21T02:02:08.056Z",
+    "version": "1.0"
+  }
+}

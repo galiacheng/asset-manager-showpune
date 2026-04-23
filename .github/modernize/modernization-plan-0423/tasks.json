@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Tasks template for modernization plan. Generate this file alongside plan.md to track individual migration tasks.",
+  "tasks": [
+    {
+      "type": "transform",
+      "id": "001-transform-s3-to-azure-blob-storage",
+      "description": "Migrate file storage from AWS S3 to Azure Blob Storage in both web and worker modules",
+      "reason": "The application uses AWS S3 with static credentials for file upload, download, and listing. Migrating to Azure Blob Storage enables secure, managed storage on Azure with Managed Identity authentication.",
+      "requirements": "Migrate all AWS S3 operations (upload, download, list, delete) in both the web and worker modules to Azure Blob Storage. Use Managed Identity for authentication. Replace the AWS SDK S3 client configuration and all S3 service calls with Azure Blob Storage equivalents.",
+      "skills": [
+        {
+          "name": "migration-s3-to-azure-blob-storage",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "002-transform-rabbitmq-to-servicebus",
+      "description": "Migrate messaging from RabbitMQ (AMQP) to Azure Service Bus in both web and worker modules",
+      "reason": "Both modules use Spring AMQP with RabbitMQ for image processing message passing. Azure Service Bus provides a fully managed messaging service on Azure with Managed Identity support.",
+      "requirements": "Migrate the Spring AMQP RabbitMQ messaging in both the web and worker modules to Azure Service Bus. Replace queue declarations, message producers, and message consumers. Use Managed Identity for authentication.",
+      "dependencies": ["001-transform-s3-to-azure-blob-storage"],
+      "skills": [
+        {
+          "name": "migration-amqp-rabbitmq-servicebus",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "003-transform-postgresql-managed-identity",
+      "description": "Migrate PostgreSQL database connectivity to Azure Database for PostgreSQL with Managed Identity in both modules",
+      "reason": "Both modules connect to PostgreSQL using plaintext username/password credentials. Using Azure Managed Identity eliminates the need for stored passwords and improves security.",
+      "requirements": "Migrate the PostgreSQL database connections in both the web and worker modules from password-based authentication to Azure Managed Identity authentication against Azure Database for PostgreSQL. Update datasource configuration accordingly.",
+      "dependencies": ["001-transform-s3-to-azure-blob-storage"],
+      "skills": [
+        {
+          "name": "migration-mi-postgresql-azure-sdk-public-cloud",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "004-transform-plaintext-credentials-to-keyvault",
+      "description": "Migrate plaintext credentials from configuration files to Azure Key Vault",
+      "reason": "The application stores AWS access keys, RabbitMQ passwords, and PostgreSQL passwords as plaintext in application.properties files. These should be stored securely in Azure Key Vault.",
+      "requirements": "Identify all plaintext credentials in application.properties files (AWS keys, RabbitMQ credentials, PostgreSQL passwords) and migrate them to Azure Key Vault. Use Managed Identity to access Key Vault secrets at runtime.",
+      "dependencies": [
+        "002-transform-rabbitmq-to-servicebus",
+        "003-transform-postgresql-managed-identity"
+      ],
+      "skills": [
+        {
+          "name": "migration-plaintext-credential-to-azure-keyvault",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    }
+  ],
+  "metadata": {
+    "planName": "modernization-plan-0423",
+    "projectName": "asset-manager",
+    "language": "java",
+    "createdAt": "2026-04-23T01:43:00.000Z",
+    "version": "1.0"
+  }
+}

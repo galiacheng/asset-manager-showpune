@@ -1,0 +1,69 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Tasks template for modernization plan. Generate this file alongside plan.md to track individual migration tasks.",
+  "tasks": [
+    {
+      "type": "transform",
+      "id": "001-transform-s3-to-azure-blob-storage",
+      "description": "Migrate AWS S3 file storage to Azure Blob Storage in both web and worker modules",
+      "reason": "The application uses AWS S3 (aws-sdk v2) for storing and retrieving image files. To run on Azure, S3 must be replaced with Azure Blob Storage. Managed Identity removes the need for plaintext AWS credentials.",
+      "requirements": "Migrate all AWS S3 operations (upload, download, list, delete) in the web and worker modules to Azure Blob Storage. Use Managed Identity for authentication. Remove AWS SDK dependencies and AWS credential configuration properties.",
+      "skills": [
+        {
+          "name": "migration-s3-to-azure-blob-storage",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "002-transform-rabbitmq-to-servicebus",
+      "description": "Migrate RabbitMQ (AMQP) messaging to Azure Service Bus in both web and worker modules",
+      "reason": "Both modules use Spring AMQP with RabbitMQ for asynchronous image processing messaging. Azure Service Bus provides a fully managed alternative with Managed Identity support.",
+      "requirements": "Migrate Spring AMQP RabbitMQ configuration and usage to Azure Service Bus in both the web module (message producer) and worker module (message consumer). Use Managed Identity for authentication. Replace RabbitMQ connection configuration.",
+      "dependencies": [],
+      "skills": [
+        {
+          "name": "migration-amqp-rabbitmq-servicebus",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "003-transform-postgresql-managed-identity",
+      "description": "Migrate PostgreSQL connectivity to use Azure Managed Identity in both web and worker modules",
+      "reason": "Both modules connect to PostgreSQL using plaintext username/password credentials in application.properties. Using Azure Managed Identity for Azure Database for PostgreSQL eliminates credential exposure.",
+      "requirements": "Migrate both web and worker modules from password-based PostgreSQL authentication to Azure Managed Identity for Azure Database for PostgreSQL. Remove plaintext database credentials from configuration files.",
+      "dependencies": [],
+      "skills": [
+        {
+          "name": "migration-mi-postgresql",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    }
+  ],
+  "metadata": {
+    "planName": "modernization-plan-0424",
+    "projectName": "assets-manager-parent",
+    "language": "java",
+    "createdAt": "2026-04-24T07:14:06.501Z",
+    "version": "1.0"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "description": "Upgrade plan to migrate project to latest LTS versions",
+  "tasks": [
+    {
+      "type": "upgrade",
+      "id": "001-upgrade-java-spring-boot",
+      "description": "Upgrade to Java 25 and Spring Boot 4.x with Spring Framework 7.x and Jakarta EE migration",
+      "reason": "Migrate to the latest LTS versions to benefit from long-term support, performance improvements, new language features, and security patches. Spring Boot 4.x requires Java 25 and includes Spring Framework 7.x.",
+      "requirements": "Upgrade JDK to 25, Spring Boot to 4.x, Spring Framework to 7.x, and migrate javax.* imports to jakarta.* namespace as required by Jakarta EE. Update all dependency versions in build files to be compatible with Spring Boot 4.x. Ensure all existing functionality is preserved after the upgrade.",
+      "skills": [
+        {
+          "name": "java-version-upgrade",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      },
+      "status": "pending"
+    }
+  ],
+  "metadata": {
+    "planName": "upgrade-to-lts",
+    "projectName": "application",
+    "language": "java",
+    "createdAt": "2026-05-20T09:02:45.000Z",
+    "version": "1.0"
+  }
+}

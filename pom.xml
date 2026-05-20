@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.13</version>
+        <version>4.0.0</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     
@@ -16,11 +16,22 @@
     <packaging>pom</packaging>
     
     <properties>
-        <java.version>17</java.version>
+        <java.version>25</java.version>
+        <spring-retry.version>2.0.12</spring-retry.version>
     </properties>
 
     <modules>
         <module>web</module>
         <module>worker</module>
     </modules>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.retry</groupId>
+                <artifactId>spring-retry</artifactId>
+                <version>${spring-retry.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 </project>

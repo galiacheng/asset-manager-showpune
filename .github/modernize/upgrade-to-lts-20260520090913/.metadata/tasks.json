@@ -19,7 +19,13 @@
         "generateNewUnitTests": "false",
         "passUnitTests": "true"
       },
-      "status": "pending"
+      "status": "success",
+      "summary": "Upgraded from Java 11 / Spring Boot 2.7.14 to Java 25 / Spring Boot 4.0.0 (Spring Framework 7.0.1) via an intermediate step at Spring Boot 3.3.13 / Java 17. Key changes: javax.* → jakarta.* namespace migration; SimpleRabbitListenerContainerFactoryConfigurer moved to new package; JacksonJsonMessageConverter replacing Jackson2JsonMessageConverter for Jackson 3.x; spring-retry 2.0.12 added explicitly; Lombok added to annotationProcessorPaths. Build: SUCCESS, Tests: 1/1 passed with JDK 25.",
+      "successCriteriaStatus": {
+        "passBuild": true,
+        "generateNewUnitTests": false,
+        "passUnitTests": true
+      }
     }
   ],
   "metadata": {

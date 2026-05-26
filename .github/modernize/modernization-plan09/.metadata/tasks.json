@@ -1,0 +1,117 @@
+{
+  "$schema": "../../../skills/create-modernization-plan/tasks-schema.json",
+  "description": "Tasks template for modernization-plan09 to migrate Asset Manager to Azure.",
+  "tasks": [
+    {
+      "type": "transform",
+      "id": "001-transform-storage-to-azure-blob-storage",
+      "description": "Migrate asset storage workflows from Amazon S3 to Azure Blob Storage for the web and worker modules.",
+      "reason": "The application currently stores originals and thumbnails in Amazon S3, so Azure storage migration is required to complete the cloud move.",
+      "requirements": "Replace the current S3-backed storage path in the web and worker modules with Azure Blob Storage while preserving upload, listing, download, view, and thumbnail processing behavior. Configure Azure-native authentication for the target storage service and keep the existing local development profile working for non-Azure runs.",
+      "skills": [
+        {
+          "name": "migration-s3-to-azure-blob-storage",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "002-transform-rabbitmq-to-azure-service-bus",
+      "description": "Migrate asynchronous image processing from RabbitMQ to Azure Service Bus.",
+      "reason": "The current application depends on RabbitMQ for cross-service processing, and that messaging path must move to Azure to complete the modernization.",
+      "requirements": "Replace RabbitMQ-based publishing and consumption in the web and worker modules with Azure Service Bus while preserving the existing processing message contract, acknowledgement flow, retry behavior, and background image processing responsibilities. Use managed identity aligned authentication for the Azure messaging path.",
+      "dependencies": [
+        "001-transform-storage-to-azure-blob-storage"
+      ],
+      "skills": [
+        {
+          "name": "migration-amqp-rabbitmq-servicebus",
+          "location": "builtin"
+        },
+        {
+          "name": "migration-mi-servicebus",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "transform",
+      "id": "003-transform-postgresql-to-azure-postgresql-mi",
+      "description": "Modernize metadata persistence for Azure Database for PostgreSQL with managed identity aligned authentication.",
+      "reason": "The application already uses PostgreSQL, but production connectivity still relies on password-based credentials that should be replaced during the Azure migration.",
+      "requirements": "Retain the current PostgreSQL-backed metadata model and repository behavior while updating the production database path for Azure Database for PostgreSQL. Replace password-based runtime connectivity with managed identity aligned authentication for Azure deployment scenarios without removing the local development workflow.",
+      "dependencies": [
+        "001-transform-storage-to-azure-blob-storage",
+        "002-transform-rabbitmq-to-azure-service-bus"
+      ],
+      "skills": [
+        {
+          "name": "migration-mi-postgresql",
+          "location": "builtin"
+        }
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "security",
+      "id": "004-security-cve-remediation",
+      "description": "Scan project dependencies for known CVEs and remediate confirmed vulnerabilities before Azure deployment.",
+      "reason": "Every modernization plan must include security hardening so the migrated application is deployed on patched and supported dependencies.",
+      "requirements": "Scan all project dependencies for known CVEs and upgrade vulnerable components to the minimum patched versions. If remediation requires a major version change, document the affected dependency, the upgraded version, and the compatibility risk, then verify the project build and existing tests after remediation.",
+      "dependencies": [
+        "001-transform-storage-to-azure-blob-storage",
+        "002-transform-rabbitmq-to-azure-service-bus",
+        "003-transform-postgresql-to-azure-postgresql-mi"
+      ],
+      "successCriteria": {
+        "passBuild": "true",
+        "generateNewUnitTests": "false",
+        "passUnitTests": "true"
+      }
+    },
+    {
+      "type": "deployment",
+      "id": "005-deployment-azure-container-apps",
+      "description": "Deploy the web and worker applications to Azure Container Apps as the default Azure hosting target.",
+      "reason": "A concrete Azure hosting target is required so both application modules can run after storage, messaging, and database migration work completes.",
+      "requirements": "Package and deploy the web and worker applications to Azure Container Apps, including the container build flow required for this target. Configure the applications to use the migrated Azure services and managed identities in the target environment without reintroducing password-based production credentials.",
+      "dependencies": [
+        "001-transform-storage-to-azure-blob-storage",
+        "002-transform-rabbitmq-to-azure-service-bus",
+        "003-transform-postgresql-to-azure-postgresql-mi",
+        "004-security-cve-remediation"
+      ],
+      "skills": [
+        {
+          "name": "azcli-containerapp-deploy",
+          "location": "builtin"
+        }
+      ],
+      "targetAzureService": "Azure Container Apps",
+      "resourceStatus": "Create or use the minimal Azure target environment required for deployment.",
+      "deploymentTool": "bicep"
+    }
+  ],
+  "metadata": {
+    "planName": "modernization-plan09",
+    "projectName": "Asset Manager",
+    "language": "java",
+    "createdAt": "2026-05-26T08:40:12Z",
+    "version": "1.0"
+  }
+}
